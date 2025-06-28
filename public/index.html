@@ -4,334 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookHub - Thư Viện Sách Điện Tử</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <meta name="google-signin-client_id" content="331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com">
+    <script src="https://accounts.google.com/gsi/client?onload=onGoogleScriptLoad" async defer></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            width: 100%;
-            max-width: 450px;
-            transform: translateY(20px);
-            animation: slideUp 0.8s ease-out forwards;
-        }
-
-        @keyframes slideUp {
-            to { transform: translateY(0); }
-        }
-
-        .header {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-            color: white;
-            text-align: center;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-
-        .login-section, .dashboard-section {
-            padding: 2rem;
-            text-align: center; /* Center align the content */
-        }
-
-        .login-instruction {
-            color: #333;
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            line-height: 1.4;
-        }
-
-        /* Google Sign-In Button Styling */
-        #googleSignInContainer {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            margin: 1.5rem 0;
-        }
-
-        #g_id_signin {
-            width: 100%;
-            max-width: 280px;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        /* CRITICAL: Default state visibility */
-        .hidden {
-            display: none !important;
-        }
-
-        .login-section {
-            display: block; /* Always show login first */
-        }
-
-        .dashboard-section {
-            display: none; /* Hidden by default */
-        }
-
-        .flipbook-viewer {
-            display: none !important; /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 9999;
-            flex-direction: column;
-        }
-
-        .flipbook-viewer.show {
-            display: flex !important; /* Show when needed */
-        }
-
-        .user-info {
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin-bottom: 1rem;
-            border: 3px solid white;
-        }
-
-        .book-preview {
-            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
-            padding: 2rem;
-            border-radius: 12px;
-            margin: 1rem 0;
-            color: white;
-            text-align: center;
-        }
-
-        .flipbook-btn {
-            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
-            color: #333;
-            font-weight: bold;
-            width: 100%;
-            margin-bottom: 1rem;
-        }
-
-        .logout-btn {
-            background: linear-gradient(135deg, #ff7675, #fd79a8);
-            width: 100%;
-        }
-
-        .viewer-header {
-            background: linear-gradient(135deg, #333, #555);
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .viewer-controls {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .control-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .control-btn:hover {
-            background: linear-gradient(135deg, #5a6fd8, #6a4190);
-            transform: translateY(-1px);
-        }
-
-        .btn-close {
-            background: linear-gradient(135deg, #ff4757, #ff3742);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .btn-close:hover {
-            background: linear-gradient(135deg, #ff3742, #ff1e2d);
-            transform: translateY(-1px);
-        }
-
-        .flipbook-container-iframe {
-            flex: 1;
-            padding: 1rem;
-            background: #f8f9fa;
-            overflow: hidden;
-        }
-
-        .flipbook-loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            background: #f8f9fa;
-            flex-direction: column;
-            gap: 1rem;
-            font-size: 1.2rem;
-            color: #666;
-        }
-
-        .success-message, .error-message {
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-        
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .flipbook-info {
-            background: linear-gradient(135deg, #a8e6cf, #88d8a3);
-            color: #2d3436;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            .container {
-                margin: 0.5rem;
-            }
-            .login-section, .dashboard-section {
-                padding: 1.5rem;
-            }
-            .viewer-header {
-                padding: 0.75rem;
-                flex-direction: column;
-                gap: 0.5rem;
-                text-align: center;
-            }
-            .viewer-controls {
-                width: 100%;
-                justify-content: center;
-            }
-            .control-btn, .btn-close {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
-            }
-            .flipbook-container-iframe {
-                padding: 0.5rem;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .container { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; width: 100%; max-width: 450px; transform: translateY(20px); animation: slideUp 0.8s ease-out forwards; }
+        @keyframes slideUp { to { transform: translateY(0); } }
+        .header { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; text-align: center; padding: 2rem; position: relative; overflow: hidden; }
+        .header::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(180deg); } }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; z-index: 1; }
+        .header p { font-size: 1.1rem; opacity: 0.9; position: relative; z-index: 1; }
+        .login-section, .dashboard-section { padding: 2rem; text-align: center; }
+        .login-instruction { color: #333; font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; line-height: 1.4; }
+        #googleSignInContainer { width: 100%; display: flex; justify-content: center; margin: 1.5rem 0; }
+        #g_id_signin { width: 100%; max-width: 280px; }
+        .btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s; }
+        .btn:hover::before { left: 100%; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3); }
+        .hidden { display: none !important; }
+        .login-section { display: block; }
+        .dashboard-section { display: none; }
+        .flipbook-viewer { display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 9999; flex-direction: column; }
+        .flipbook-viewer.show { display: flex !important; }
+        .user-info { background: linear-gradient(135deg, #74b9ff, #0984e3); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; margin-bottom: 1rem; border: 3px solid white; }
+        .book-preview { background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); padding: 2rem; border-radius: 12px; margin: 1rem 0; color: white; text-align: center; }
+        .flipbook-btn { background: linear-gradient(135deg, #56ab2f, #a8e6cf); color: #333; font-weight: bold; width: 100%; margin-bottom: 1rem; }
+        .logout-btn { background: linear-gradient(135deg, #ff7675, #fd79a8); width: 100%; }
+        .viewer-header { background: linear-gradient(135deg, #333, #555); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .viewer-controls { display: flex; gap: 0.5rem; align-items: center; }
+        .control-btn, .btn-close { border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease; }
+        .control-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-close { background: linear-gradient(135deg, #ff4757, #ff3742); color: white; font-weight: bold; }
+        .flipbook-container-iframe { flex: 1; padding: 1rem; background: #f8f9fa; overflow: hidden; }
+        .flipbook-loading { display: flex; justify-content: center; align-items: center; height: 100%; background: #f8f9fa; flex-direction: column; gap: 1rem; font-size: 1.2rem; color: #666; }
+        .success-message, .error-message { border-radius: 8px; padding: 1rem; margin-bottom: 1rem; text-align: center; }
+        .success-message { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error-message { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     </style>
 </head>
 <body>
@@ -343,18 +54,9 @@
 
         <div id="loginSection" class="login-section">
             <div id="messageContainer"></div>
-            
             <p class="login-instruction">HÃY ĐĂNG NHẬP BẰNG TÀI KHOẢN GOOGLE CỦA BẠN</p>
-
             <div id="googleSignInContainer">
-                <div id="g_id_onload"
-                     data-client_id="331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com"
-                     data-context="signin"
-                     data-ux_mode="popup"
-                     data-callback="handleGoogleSignIn"
-                     data-auto_prompt="false">
-                </div>
-                
+                <div id="g_id_onload"></div>
                 <div id="g_id_signin"></div>
             </div>
         </div>
@@ -365,15 +67,160 @@
                 <h3 id="userName">🎉 Chào mừng!</h3>
                 <p id="userEmail"></p>
             </div>
+            <button class="btn logout-btn" id="logoutBtn">🚪 Đăng Xuất</button>
+            </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            GOOGLE_CLIENT_ID: '331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com',
+            API_BASE: '/api' // Giả định backend API của bạn
+        };
+
+        // DOM Elements
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const messageContainer = document.getElementById('messageContainer');
+        const userNameEl = document.getElementById('userName');
+        const userEmailEl = document.getElementById('userEmail');
+        const userAvatarEl = document.getElementById('userAvatar');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // SỬA ĐỔI: Hàm này sẽ được Google gọi sau khi script của họ đã tải xong
+        function onGoogleScriptLoad() {
+            console.log('✅ Google GSI script loaded.');
+            initializeGoogleSignIn();
+        }
+
+        function initializeGoogleSignIn() {
+            if (typeof google === 'undefined' || !google.accounts) {
+                console.error('❌ Google object not found. Cannot initialize Sign-In.');
+                showMessage('Không thể khởi tạo dịch vụ đăng nhập. Vui lòng thử lại.', 'error');
+                return;
+            }
+
+            try {
+                // Khởi tạo Google Sign-In
+                google.accounts.id.initialize({
+                    client_id: CONFIG.GOOGLE_CLIENT_ID,
+                    callback: handleGoogleSignIn, // Hàm xử lý sau khi đăng nhập thành công
+                });
+
+                // Hiển thị nút đăng nhập
+                google.accounts.id.renderButton(
+                    document.getElementById('g_id_signin'),
+                    { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', logo_alignment: 'left' }
+                );
+
+                // Tùy chọn: Hiển thị One Tap prompt
+                google.accounts.id.prompt(); 
+                
+                console.log('🔧 Google Sign-In Initialized and Button Rendered.');
+
+            } catch (error) {
+                console.error('❌ Google Sign-In initialization failed:', error);
+                showMessage('Lỗi khởi tạo đăng nhập Google.', 'error');
+            }
+        }
+
+        // KHÔI PHỤC: Hàm xử lý đăng nhập đã được trả về logic gốc
+        async function handleGoogleSignIn(response) {
+            console.log('🔐 Google Sign-In response received, sending to backend...');
             
-            <div class="flipbook-container">
-                <h2>📖 Thư Viện Của Bạn</h2>
-                
-                <div class="flipbook-info">
-                    <strong>📚 FlipHTML5 Integration</strong><br>
-                    Sách được tối ưu cho mọi thiết bị với công nghệ HTML5
-                </div>
-                
-                <div class="book-preview">
-                    <h3>🌟 Sách Mới Nhất</h3>
-                    <p
+            try {
+                // Gửi ID token về backend của bạn để xác thực
+                const apiResponse = await fetch(`${CONFIG.API_BASE}/google-auth`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ idToken: response.credential })
+                });
+
+                const data = await apiResponse.json();
+
+                if (apiResponse.ok && data.success) {
+                    console.log('✅ Backend verification successful:', data.user.email);
+                    
+                    localStorage.setItem('auth_token', data.token); // Lưu token của bạn
+                    
+                    const userData = {
+                        ...data.user,
+                        loginMethod: 'google'
+                    };
+                    
+                    login(userData);
+                    showMessage(`🎉 Chào mừng ${data.user.name}!`, 'success');
+
+                } else {
+                    console.error('❌ Backend verification failed:', data.message);
+                    showMessage(data.message || 'Đăng nhập Google thất bại tại máy chủ.', 'error');
+                }
+
+            } catch (error) {
+                console.error('❌ Error during backend communication:', error);
+                showMessage('Có lỗi kết nối đến máy chủ. Vui lòng thử lại.', 'error');
+            }
+        }
+
+        // Các hàm còn lại (login, showDashboard, logout, v.v.)
+        function login(userData) {
+            localStorage.setItem('bookhub_user', JSON.stringify(userData));
+            showDashboard(userData);
+        }
+
+        function showDashboard(userData) {
+            loginSection.style.display = 'none';
+            dashboardSection.style.display = 'block';
+            userNameEl.textContent = `🎉 Chào ${userData.name}!`;
+            userEmailEl.textContent = userData.email;
+            if (userData.avatar) {
+                userAvatarEl.src = userData.avatar;
+                userAvatarEl.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            google.accounts.id.disableAutoSelect();
+            localStorage.removeItem('bookhub_user');
+            localStorage.removeItem('auth_token');
+            showLoginSection();
+            showMessage('👋 Đã đăng xuất thành công!', 'success');
+        }
+
+        function showLoginSection() {
+            loginSection.style.display = 'block';
+            dashboardSection.style.display = 'none';
+        }
+
+        function checkAuthStatus() {
+            const savedUser = localStorage.getItem('bookhub_user');
+            if (savedUser) {
+                showDashboard(JSON.parse(savedUser));
+            } else {
+                showLoginSection();
+            }
+        }
+        
+        function setupEventListeners() {
+            if (logoutBtn) logoutBtn.addEventListener('click', logout);
+        }
+        
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            messageContainer.innerHTML = '';
+            messageContainer.appendChild(messageDiv);
+            setTimeout(() => messageDiv.remove(), 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 DOMContentLoaded: App initializing...');
+            checkAuthStatus();
+            setupEventListeners();
+        });
+
+    </script>
+</body>
+</html>
