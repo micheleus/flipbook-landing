@@ -534,13 +534,15 @@
 
     <script>
         // Configuration
-        const CONFIG = {
-            FLIPBOOK_URL: 'https://online.fliphtml5.com/gfqeu/wswt/',
-            DEMO_USERS: {
-                'demo@gmail.com': { password: 'password123', name: 'Demo User' },
-                'user@example.com': { password: 'demo123', name: 'Test User' }
-            }
-        };
+const CONFIG = {
+    FLIPBOOK_URL: 'https://online.fliphtml5.com/gfqeu/wswt/',
+    GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+    API_BASE: '/api', // ← API endpoints
+    DEMO_USERS: {
+        'demo@gmail.com': { password: 'password123', name: 'Demo User' },
+        'user@example.com': { password: 'demo123', name: 'Test User' }
+    }
+};
 
         // DOM Elements
         const loginSection = document.getElementById('loginSection');
