@@ -321,26 +321,7 @@
             color: #666;
         }
 
-        .demo-accounts {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
 
-        .demo-accounts h4 {
-            color: #495057;
-            margin-bottom: 0.5rem;
-        }
-
-        .demo-accounts code {
-            background: #e9ecef;
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: monospace;
-        }
 
         .google-btn {
             width: 100%;
@@ -412,15 +393,7 @@
             font-size: 0.9rem;
         }
 
-        .debug-info {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 6px;
-            padding: 0.75rem;
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            color: #856404;
-        }
+
 
         /* Mobile responsive */
         @media (max-width: 768px) {
@@ -503,36 +476,12 @@
                     <div id="g_id_signin"></div>
                 </div>
 
-                <!-- Fallback buttons -->
-                <button type="button" class="btn google-btn" id="manualGoogleSignIn" style="display: none;">
-                    📧 Đăng nhập Google (Manual)
-                </button>
 
-                <button type="button" class="btn" id="googleSignInFallback" 
-                        style="background: #34a853; margin-top: 0.5rem; font-size: 0.9rem;">
-                    🧪 Test Google Login (Demo)
-                </button>
             </form>
 
-            <!-- Demo Accounts -->
-            <div class="demo-accounts">
-                <h4>🔑 Tài khoản demo:</h4>
-                <p><code>demo@gmail.com</code> / <code>password123</code></p>
-                <p><code>user@example.com</code> / <code>demo123</code></p>
-                
-                <h4 style="margin-top: 1rem;">📧 Email được phép (Google OAuth):</h4>
-                <p><code>demo@gmail.com</code></p>
-                <p><code>user1@gmail.com</code></p>
-                <p><code>user2@company.com</code></p>
-                <p><code>admin@yourdomain.com</code></p>
-                <small style="color: #666;">Chỉ những email này mới có thể đăng nhập bằng Google</small>
-            </div>
 
-            <!-- Debug Info -->
-            <div id="debugInfo" class="debug-info" style="display: none;">
-                <strong>🔍 Debug Info:</strong>
-                <div id="debugContent"></div>
-            </div>
+
+
         </div>
 
         <!-- Dashboard Section (Hidden by default) -->
@@ -611,39 +560,10 @@
         const logoutBtn = document.getElementById('logoutBtn');
         const loginText = document.getElementById('loginText');
         const loginLoading = document.getElementById('loginLoading');
-        const debugInfo = document.getElementById('debugInfo');
-        const debugContent = document.getElementById('debugContent');
-
-        // Debug function
-        function debugGoogleSDK() {
-            const info = {
-                googleLoaded: typeof google !== 'undefined',
-                googleAccounts: typeof google?.accounts !== 'undefined',
-                clientId: CONFIG.GOOGLE_CLIENT_ID,
-                timestamp: new Date().toISOString()
-            };
-            
-            console.log('🔍 Google SDK Debug:', info);
-            
-            if (debugContent) {
-                debugContent.innerHTML = `
-                    Google SDK: ${info.googleLoaded ? '✅' : '❌'}<br>
-                    Google Accounts: ${info.googleAccounts ? '✅' : '❌'}<br>
-                    Client ID: ${info.clientId.substring(0, 20)}...<br>
-                    Time: ${info.timestamp}
-                `;
-                debugInfo.style.display = 'block';
-            }
-            
-            return info;
-        }
 
         // Google Sign-In initialization
         function initializeGoogleSignIn() {
             console.log('🔧 Initializing Google Sign-In...');
-            
-            // Debug SDK status
-            const sdkStatus = debugGoogleSDK();
             
             if (typeof google !== 'undefined' && google.accounts) {
                 console.log('✅ Google SDK loaded successfully');
@@ -685,29 +605,13 @@
             }
         }
 
-        // Show fallback button if Google SDK fails
+        // Show error message if Google SDK fails
         function showFallbackButton() {
-            const manualBtn = document.getElementById('manualGoogleSignIn');
-            if (manualBtn) {
-                manualBtn.style.display = 'block';
-                manualBtn.addEventListener('click', showGoogleSignInPrompt);
-            }
+            console.warn('⚠️ Google SDK failed to load');
+            showMessage('Google Sign-In hiện không khả dụng. Vui lòng sử dụng email/password hoặc thử lại sau.', 'error');
         }
 
-        // Manual Google Sign-In trigger
-        function showGoogleSignInPrompt() {
-            if (typeof google !== 'undefined' && google.accounts) {
-                google.accounts.id.prompt((notification) => {
-                    console.log('Google prompt result:', notification);
-                    if (notification.isNotDisplayed()) {
-                        console.log('Google prompt not displayed:', notification.getNotDisplayedReason());
-                    }
-                });
-            } else {
-                console.log('Google SDK not available, using fallback');
-                handleGoogleSignInFallback();
-            }
-        }
+
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -760,11 +664,6 @@
             console.log('🔧 Setting up event listeners...');
             
             if (loginForm) loginForm.addEventListener('submit', handleEmailLogin);
-            
-            // Fallback Google Sign-In button
-            const googleFallbackBtn = document.getElementById('googleSignInFallback');
-            if (googleFallbackBtn) googleFallbackBtn.addEventListener('click', handleGoogleSignInFallback);
-            
             if (openFlipbookBtn) openFlipbookBtn.addEventListener('click', openFlipbook);
             if (logoutBtn) logoutBtn.addEventListener('click', logout);
             
@@ -891,52 +790,7 @@
             }
         }
 
-        // Fallback Google Sign-In (for testing)
-        async function handleGoogleSignInFallback() {
-            console.log('📧 Google sign-in fallback clicked...');
-            showLoading();
-            
-            // Simulate asking for email
-            const email = prompt('Nhập email Gmail để test (phải trong danh sách cho phép):');
-            
-            if (!email) {
-                hideLoading();
-                return;
-            }
-            
-            try {
-                // Check if email is in allowed list by calling our API
-                const response = await fetch(`${CONFIG.API_BASE}/check-email`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.allowed) {
-                    const userData = {
-                        email: data.email,
-                        name: data.name || 'Test User',
-                        avatar: 'https://via.placeholder.com/60',
-                        loginMethod: 'google-fallback'
-                    };
-                    
-                    login(userData);
-                    showMessage(`🎉 Chào mừng ${userData.name}!`, 'success');
-                } else {
-                    showMessage(`❌ Email ${email} không có quyền truy cập.`, 'error');
-                }
-                
-            } catch (error) {
-                console.error('❌ Fallback auth error:', error);
-                showMessage('Có lỗi xảy ra khi kiểm tra email.', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
+
 
         // Login function
         function login(userData) {
@@ -1113,18 +967,12 @@
             if (loginText) loginText.classList.add('hidden');
             if (loginLoading) loginLoading.classList.remove('hidden');
             if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = true;
-            
-            const googleFallbackBtn = document.getElementById('googleSignInFallback');
-            if (googleFallbackBtn) googleFallbackBtn.disabled = true;
         }
 
         function hideLoading() {
             if (loginText) loginText.classList.remove('hidden');
             if (loginLoading) loginLoading.classList.add('hidden');
             if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = false;
-            
-            const googleFallbackBtn = document.getElementById('googleSignInFallback');
-            if (googleFallbackBtn) googleFallbackBtn.disabled = false;
         }
 
         // Show message
@@ -1153,18 +1001,11 @@
             }
         }
 
-        // Make functions available globally for debugging
-        window.debugGoogleSDK = debugGoogleSDK;
-        window.initializeGoogleSignIn = initializeGoogleSignIn;
-        window.showGoogleSignInPrompt = showGoogleSignInPrompt;
-
         // Console info
-        console.log('🔐 Demo Accounts Available:');
-        console.log('📧 demo@gmail.com / password123');
-        console.log('📧 user@example.com / demo123');
         console.log('📚 Flipbook URL:', CONFIG.FLIPBOOK_URL);
-        console.log('🔧 Google Client ID:', CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+        console.log('🔧 Google Client ID configured');
         console.log('🎯 API Base:', CONFIG.API_BASE);
+        console.log('✅ BookHub Production Ready!');
     </script>
 </body>
 </html>
