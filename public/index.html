@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookHub - Thư Viện Sách Điện Tử</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <meta name="google-signin-client_id" content="331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com">
     <style>
         * {
             margin: 0;
@@ -356,6 +358,16 @@
             color: white;
         }
 
+        /* Google Sign-In Button Styling */
+        #googleSignInContainer {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        #g_id_signin {
+            width: 100%;
+        }
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -398,6 +410,16 @@
             margin-bottom: 1rem;
             text-align: center;
             font-size: 0.9rem;
+        }
+
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #856404;
         }
 
         /* Mobile responsive */
@@ -467,9 +489,28 @@
                 <div class="divider">
                     <span>hoặc</span>
                 </div>
-                
-                <button type="button" class="btn google-btn" id="googleSignIn">
-                    📧 Đăng nhập bằng Gmail
+
+                <!-- Google Sign-In Section -->
+                <div id="googleSignInContainer">
+                    <div id="g_id_onload"
+                         data-client_id="331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com"
+                         data-context="signin"
+                         data-ux_mode="popup"
+                         data-callback="handleGoogleSignIn"
+                         data-auto_prompt="false">
+                    </div>
+                    
+                    <div id="g_id_signin"></div>
+                </div>
+
+                <!-- Fallback buttons -->
+                <button type="button" class="btn google-btn" id="manualGoogleSignIn" style="display: none;">
+                    📧 Đăng nhập Google (Manual)
+                </button>
+
+                <button type="button" class="btn" id="googleSignInFallback" 
+                        style="background: #34a853; margin-top: 0.5rem; font-size: 0.9rem;">
+                    🧪 Test Google Login (Demo)
                 </button>
             </form>
 
@@ -478,6 +519,19 @@
                 <h4>🔑 Tài khoản demo:</h4>
                 <p><code>demo@gmail.com</code> / <code>password123</code></p>
                 <p><code>user@example.com</code> / <code>demo123</code></p>
+                
+                <h4 style="margin-top: 1rem;">📧 Email được phép (Google OAuth):</h4>
+                <p><code>demo@gmail.com</code></p>
+                <p><code>user1@gmail.com</code></p>
+                <p><code>user2@company.com</code></p>
+                <p><code>admin@yourdomain.com</code></p>
+                <small style="color: #666;">Chỉ những email này mới có thể đăng nhập bằng Google</small>
+            </div>
+
+            <!-- Debug Info -->
+            <div id="debugInfo" class="debug-info" style="display: none;">
+                <strong>🔍 Debug Info:</strong>
+                <div id="debugContent"></div>
             </div>
         </div>
 
@@ -533,16 +587,16 @@
     </div>
 
     <script>
-        // Configuration
-const CONFIG = {
-    FLIPBOOK_URL: 'https://online.fliphtml5.com/gfqeu/wswt/',
-    GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-    API_BASE: '/api', // ← API endpoints
-    DEMO_USERS: {
-        'demo@gmail.com': { password: 'password123', name: 'Demo User' },
-        'user@example.com': { password: 'demo123', name: 'Test User' }
-    }
-};
+        // Configuration with real Google Client ID
+        const CONFIG = {
+            FLIPBOOK_URL: 'https://online.fliphtml5.com/gfqeu/wswt/',
+            GOOGLE_CLIENT_ID: '331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com',
+            API_BASE: '/api',
+            DEMO_USERS: {
+                'demo@gmail.com': { password: 'password123', name: 'Demo User' },
+                'user@example.com': { password: 'demo123', name: 'Test User' }
+            }
+        };
 
         // DOM Elements
         const loginSection = document.getElementById('loginSection');
@@ -555,9 +609,105 @@ const CONFIG = {
         const userAvatarEl = document.getElementById('userAvatar');
         const openFlipbookBtn = document.getElementById('openFlipbook');
         const logoutBtn = document.getElementById('logoutBtn');
-        const googleSignInBtn = document.getElementById('googleSignIn');
         const loginText = document.getElementById('loginText');
         const loginLoading = document.getElementById('loginLoading');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+
+        // Debug function
+        function debugGoogleSDK() {
+            const info = {
+                googleLoaded: typeof google !== 'undefined',
+                googleAccounts: typeof google?.accounts !== 'undefined',
+                clientId: CONFIG.GOOGLE_CLIENT_ID,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('🔍 Google SDK Debug:', info);
+            
+            if (debugContent) {
+                debugContent.innerHTML = `
+                    Google SDK: ${info.googleLoaded ? '✅' : '❌'}<br>
+                    Google Accounts: ${info.googleAccounts ? '✅' : '❌'}<br>
+                    Client ID: ${info.clientId.substring(0, 20)}...<br>
+                    Time: ${info.timestamp}
+                `;
+                debugInfo.style.display = 'block';
+            }
+            
+            return info;
+        }
+
+        // Google Sign-In initialization
+        function initializeGoogleSignIn() {
+            console.log('🔧 Initializing Google Sign-In...');
+            
+            // Debug SDK status
+            const sdkStatus = debugGoogleSDK();
+            
+            if (typeof google !== 'undefined' && google.accounts) {
+                console.log('✅ Google SDK loaded successfully');
+                
+                try {
+                    // Initialize Google Sign-In
+                    google.accounts.id.initialize({
+                        client_id: CONFIG.GOOGLE_CLIENT_ID,
+                        callback: handleGoogleSignIn,
+                        auto_select: false,
+                        cancel_on_tap_outside: true
+                    });
+                    
+                    // Render the sign-in button
+                    const buttonElement = document.getElementById('g_id_signin');
+                    if (buttonElement) {
+                        google.accounts.id.renderButton(buttonElement, {
+                            theme: 'outline',
+                            size: 'large',
+                            text: 'signin_with',
+                            shape: 'rectangular',
+                            logo_alignment: 'left',
+                            width: '100%'
+                        });
+                        
+                        console.log('✅ Google Sign-In button rendered');
+                    } else {
+                        console.error('❌ Button element not found');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Google Sign-In initialization failed:', error);
+                    showFallbackButton();
+                }
+                
+            } else {
+                console.warn('⚠️ Google SDK not loaded, showing fallback');
+                showFallbackButton();
+            }
+        }
+
+        // Show fallback button if Google SDK fails
+        function showFallbackButton() {
+            const manualBtn = document.getElementById('manualGoogleSignIn');
+            if (manualBtn) {
+                manualBtn.style.display = 'block';
+                manualBtn.addEventListener('click', showGoogleSignInPrompt);
+            }
+        }
+
+        // Manual Google Sign-In trigger
+        function showGoogleSignInPrompt() {
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.prompt((notification) => {
+                    console.log('Google prompt result:', notification);
+                    if (notification.isNotDisplayed()) {
+                        console.log('Google prompt not displayed:', notification.getNotDisplayedReason());
+                    }
+                });
+            } else {
+                console.log('Google SDK not available, using fallback');
+                handleGoogleSignInFallback();
+            }
+        }
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -571,6 +721,9 @@ const CONFIG = {
             
             // Setup event listeners
             setupEventListeners();
+            
+            // Initialize Google Sign-In after a delay to ensure SDK loads
+            setTimeout(initializeGoogleSignIn, 1500);
             
             console.log('✅ BookHub ready!');
         });
@@ -607,7 +760,11 @@ const CONFIG = {
             console.log('🔧 Setting up event listeners...');
             
             if (loginForm) loginForm.addEventListener('submit', handleEmailLogin);
-            if (googleSignInBtn) googleSignInBtn.addEventListener('click', handleGoogleSignIn);
+            
+            // Fallback Google Sign-In button
+            const googleFallbackBtn = document.getElementById('googleSignInFallback');
+            if (googleFallbackBtn) googleFallbackBtn.addEventListener('click', handleGoogleSignInFallback);
+            
             if (openFlipbookBtn) openFlipbookBtn.addEventListener('click', openFlipbook);
             if (logoutBtn) logoutBtn.addEventListener('click', logout);
             
@@ -629,7 +786,7 @@ const CONFIG = {
         }
 
         // Handle email/password login
-        function handleEmailLogin(e) {
+        async function handleEmailLogin(e) {
             e.preventDefault();
             console.log('🔐 Attempting email login...');
             
@@ -643,43 +800,142 @@ const CONFIG = {
 
             showLoading();
             
-            // Simulate API call
-            setTimeout(() => {
-                if (CONFIG.DEMO_USERS[email] && CONFIG.DEMO_USERS[email].password === password) {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    console.log('✅ Email login successful:', email);
+                    
+                    localStorage.setItem('auth_token', data.token);
+                    
                     const userData = {
-                        email: email,
-                        name: CONFIG.DEMO_USERS[email].name,
+                        ...data.user,
                         loginMethod: 'email'
                     };
                     
-                    console.log('✅ Login successful:', email);
                     login(userData);
                     showMessage('🎉 Đăng nhập thành công!', 'success');
                 } else {
-                    console.log('❌ Login failed:', email);
-                    showMessage('❌ Email hoặc mật khẩu không đúng!', 'error');
+                    console.log('❌ Email login failed:', data.message);
+                    showMessage(data.message || 'Đăng nhập thất bại', 'error');
                 }
+                
+            } catch (error) {
+                console.error('❌ Email login error:', error);
+                showMessage('Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.', 'error');
+            } finally {
                 hideLoading();
-            }, 1500);
+            }
         }
 
-        // Handle Google Sign-In (simulated)
-        function handleGoogleSignIn() {
-            console.log('📧 Google sign-in clicked...');
+        // Handle Google Sign-In (Real Implementation)
+        async function handleGoogleSignIn(response) {
+            console.log('🔐 Google Sign-In response received');
+            
+            try {
+                showLoading();
+                
+                // Send ID token to our backend for verification
+                const apiResponse = await fetch(`${CONFIG.API_BASE}/google-auth`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idToken: response.credential
+                    })
+                });
+                
+                const data = await apiResponse.json();
+                
+                if (apiResponse.ok && data.success) {
+                    console.log('✅ Google auth successful:', data.user.email);
+                    
+                    // Store auth token
+                    localStorage.setItem('auth_token', data.token);
+                    
+                    const userData = {
+                        ...data.user,
+                        loginMethod: 'google'
+                    };
+                    
+                    login(userData);
+                    showMessage(`🎉 Chào mừng ${data.user.name}!`, 'success');
+                    
+                } else {
+                    console.error('❌ Google auth failed:', data.message);
+                    
+                    if (apiResponse.status === 403) {
+                        showMessage(`❌ ${data.message}`, 'error');
+                        if (data.allowedEmails) {
+                            console.log('📋 Some allowed emails:', data.allowedEmails);
+                        }
+                    } else {
+                        showMessage(data.message || 'Đăng nhập Google thất bại', 'error');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Google Sign-In error:', error);
+                showMessage('Có lỗi xảy ra khi đăng nhập Google. Vui lòng thử lại.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Fallback Google Sign-In (for testing)
+        async function handleGoogleSignInFallback() {
+            console.log('📧 Google sign-in fallback clicked...');
             showLoading();
             
-            setTimeout(() => {
-                const userData = {
-                    email: 'your.email@gmail.com',
-                    name: 'Google User',
-                    avatar: 'https://via.placeholder.com/60',
-                    loginMethod: 'google'
-                };
-                
-                login(userData);
-                showMessage('🎉 Đăng nhập Google thành công!', 'success');
+            // Simulate asking for email
+            const email = prompt('Nhập email Gmail để test (phải trong danh sách cho phép):');
+            
+            if (!email) {
                 hideLoading();
-            }, 2000);
+                return;
+            }
+            
+            try {
+                // Check if email is in allowed list by calling our API
+                const response = await fetch(`${CONFIG.API_BASE}/check-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.allowed) {
+                    const userData = {
+                        email: data.email,
+                        name: data.name || 'Test User',
+                        avatar: 'https://via.placeholder.com/60',
+                        loginMethod: 'google-fallback'
+                    };
+                    
+                    login(userData);
+                    showMessage(`🎉 Chào mừng ${userData.name}!`, 'success');
+                } else {
+                    showMessage(`❌ Email ${email} không có quyền truy cập.`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Fallback auth error:', error);
+                showMessage('Có lỗi xảy ra khi kiểm tra email.', 'error');
+            } finally {
+                hideLoading();
+            }
         }
 
         // Login function
@@ -715,10 +971,33 @@ const CONFIG = {
         }
 
         // Open flipbook
-        function openFlipbook() {
+        async function openFlipbook() {
             console.log('📚 Opening flipbook...');
             
             try {
+                // Get flipbook URL from API
+                const token = localStorage.getItem('auth_token');
+                
+                let flipbookUrl = CONFIG.FLIPBOOK_URL;
+                
+                if (token) {
+                    try {
+                        const response = await fetch(`${CONFIG.API_BASE}/flipbook-url`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            flipbookUrl = data.url;
+                            console.log('📖 Got flipbook URL from API:', flipbookUrl);
+                        }
+                    } catch (error) {
+                        console.log('⚠️ API call failed, using default URL');
+                    }
+                }
+                
                 // Show flipbook viewer
                 flipbookViewer.classList.add('show');
                 
@@ -738,7 +1017,7 @@ const CONFIG = {
                         <div style="position:relative;padding-top:max(60%,324px);width:100%;height:0;">
                             <iframe 
                                 style="position:absolute;border:none;width:100%;height:100%;left:0;top:0;" 
-                                src="${CONFIG.FLIPBOOK_URL}" 
+                                src="${flipbookUrl}" 
                                 seamless="seamless" 
                                 scrolling="no" 
                                 frameborder="0" 
@@ -806,8 +1085,14 @@ const CONFIG = {
         function logout() {
             console.log('👋 Logging out...');
             
+            // Sign out from Google if applicable
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.disableAutoSelect();
+            }
+            
             // Clear storage
             localStorage.removeItem('bookhub_user');
+            localStorage.removeItem('auth_token');
             
             // Close flipbook if open
             closeFlipbook();
@@ -828,14 +1113,18 @@ const CONFIG = {
             if (loginText) loginText.classList.add('hidden');
             if (loginLoading) loginLoading.classList.remove('hidden');
             if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = true;
-            if (googleSignInBtn) googleSignInBtn.disabled = true;
+            
+            const googleFallbackBtn = document.getElementById('googleSignInFallback');
+            if (googleFallbackBtn) googleFallbackBtn.disabled = true;
         }
 
         function hideLoading() {
             if (loginText) loginText.classList.remove('hidden');
             if (loginLoading) loginLoading.classList.add('hidden');
             if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = false;
-            if (googleSignInBtn) googleSignInBtn.disabled = false;
+            
+            const googleFallbackBtn = document.getElementById('googleSignInFallback');
+            if (googleFallbackBtn) googleFallbackBtn.disabled = false;
         }
 
         // Show message
@@ -864,11 +1153,18 @@ const CONFIG = {
             }
         }
 
+        // Make functions available globally for debugging
+        window.debugGoogleSDK = debugGoogleSDK;
+        window.initializeGoogleSignIn = initializeGoogleSignIn;
+        window.showGoogleSignInPrompt = showGoogleSignInPrompt;
+
         // Console info
         console.log('🔐 Demo Accounts Available:');
         console.log('📧 demo@gmail.com / password123');
         console.log('📧 user@example.com / demo123');
         console.log('📚 Flipbook URL:', CONFIG.FLIPBOOK_URL);
+        console.log('🔧 Google Client ID:', CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+        console.log('🎯 API Base:', CONFIG.API_BASE);
     </script>
 </body>
 </html>
