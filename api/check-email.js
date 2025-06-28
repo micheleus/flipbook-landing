@@ -1,8 +1,7 @@
 // api/check-email.js
 
-// Danh sách email được phép truy cập
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS 
-  ? process.env.ALLOWED_EMAILS.split(',').map(email => email.trim())
+  ? process.env.ALLOWED_EMAILS.split(',').map(email => email.trim().toLowerCase())
   : [
     'demo@gmail.com',
     'user1@gmail.com', 
@@ -10,7 +9,6 @@ const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS
     'admin@yourdomain.com'
   ];
 
-// Mapping email to display names (optional)
 const EMAIL_NAMES = {
   'demo@gmail.com': 'Demo User',
   'user1@gmail.com': 'User One',
@@ -19,22 +17,20 @@ const EMAIL_NAMES = {
 };
 
 export default async function handler(req, res) {
-  // Set CORS headers
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
   
   if (req.method === 'GET') {
-    // Return list of allowed emails (without exposing all emails)
     return res.json({
-      message: 'Email whitelist check endpoint',
+      message: 'Email whitelist checker',
       totalAllowed: ALLOWED_EMAILS.length,
-      sampleEmails: ALLOWED_EMAILS.slice(0, 2) // Only show first 2 for security
+      sampleEmails: ALLOWED_EMAILS.slice(0, 2)
     });
   }
   
@@ -49,23 +45,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Email required' });
     }
     
-    // Normalize email (lowercase, trim)
     const normalizedEmail = email.toLowerCase().trim();
+    const isAllowed = ALLOWED_EMAILS.includes(normalizedEmail);
     
-    // Check if email is in allowed list
-    const isAllowed = ALLOWED_EMAILS.some(allowedEmail => 
-      allowedEmail.toLowerCase() === normalizedEmail
-    );
+    console.log(`📧 Email check: ${normalizedEmail} - ${isAllowed ? 'ALLOWED' : 'DENIED'}`);
     
     if (isAllowed) {
-      console.log(`✅ Email check passed: ${normalizedEmail}`);
       res.json({
         allowed: true,
         email: normalizedEmail,
         name: EMAIL_NAMES[normalizedEmail] || 'Authorized User'
       });
     } else {
-      console.log(`❌ Email check failed: ${normalizedEmail}`);
       res.json({
         allowed: false,
         email: normalizedEmail,
