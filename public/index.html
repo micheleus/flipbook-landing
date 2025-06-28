@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookHub - Thư Viện Sách Điện Tử</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 90%;
+            max-width: 450px;
+            transform: translateY(20px);
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-section, .flipbook-section {
+            padding: 2rem;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .input-group label {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            color: #666;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .input-group input:focus + label,
+        .input-group input:valid + label {
+            top: -0.5rem;
+            left: 0.5rem;
+            font-size: 0.8rem;
+            color: #667eea;
+            background: white;
+            padding: 0 0.5rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .gmail-btn {
+            background: linear-gradient(135deg, #db4437, #c23321);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .gmail-btn:hover {
+            box-shadow: 0 10px 25px rgba(219, 68, 55, 0.3);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1rem 0;
+            position: relative;
+            color: #666;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e1e8ed;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .flipbook-container {
+            text-align: center;
+        }
+
+        .flipbook-container h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .book-preview {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            color: white;
+        }
+
+        .book-preview h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .flipbook-btn {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: #333;
+            font-weight: bold;
+        }
+
+        .flipbook-btn:hover {
+            box-shadow: 0 10px 25px rgba(86, 171, 47, 0.3);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ff7675, #fd79a8);
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 BookHub</h1>
+            <p>Thư viện sách điện tử cao cấp</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <form class="login-form" id="loginForm">
+                <div class="input-group">
+                    <input type="email" id="email" required>
+                    <label for="email">Email của bạn</label>
+                </div>
+                
+                <div class="input-group">
+                    <input type="password" id="password" required>
+                    <label for="password">Mật khẩu</label>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <span id="loginText">Đăng Nhập</span>
+                    <span id="loginLoading" class="loading hidden"></span>
+                </button>
+                
+                <div class="divider">
+                    <span>hoặc</span>
+                </div>
+                
+                <button type="button" class="btn gmail-btn" id="gmailLogin">
+                    📧 Đăng nhập bằng Gmail
+                </button>
+            </form>
+        </div>
+
+        <!-- Flipbook Section -->
+        <div id="flipbookSection" class="flipbook-section hidden">
+            <div class="user-info">
+                <h3>🎉 Chào mừng!</h3>
+                <p id="userEmail"></p>
+            </div>
+            
+            <div class="flipbook-container">
+                <h2>📖 Thư Viện Của Bạn</h2>
+                
+                <div class="book-preview">
+                    <h3>🌟 Sách Mới Nhất</h3>
+                    <p>"Nghệ Thuật Sống Đẹp" - Bestseller 2024</p>
+                    <p>✨ 250 trang | 🎯 Phát triển bản thân</p>
+                </div>
+                
+                <button class="btn flipbook-btn" id="openFlipbook">
+                    🚀 Mở Flipbook & Đọc Ngay
+                </button>
+                
+                <button class="btn logout-btn" id="logoutBtn">
+                    🚪 Đăng Xuất
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated user database
+        const users = {
+            'demo@gmail.com': 'password123',
+            'user@example.com': 'demo123'
+        };
+
+        // Current user
+        let currentUser = null;
+
+        // DOM elements
+        const loginSection = document.getElementById('loginSection');
+        const flipbookSection = document.getElementById('flipbookSection');
+        const loginForm = document.getElementById('loginForm');
+        const gmailLoginBtn = document.getElementById('gmailLogin');
+        const userEmailSpan = document.getElementById('userEmail');
+        const openFlipbookBtn = document.getElementById('openFlipbook');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginText = document.getElementById('loginText');
+        const loginLoading = document.getElementById('loginLoading');
+
+        // Check if user is already logged in
+        function checkLoggedIn() {
+            const savedUser = localStorage.getItem('bookhub_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                showFlipbookSection();
+            }
+        }
+
+        // Show loading state
+        function showLoading() {
+            loginText.classList.add('hidden');
+            loginLoading.classList.remove('hidden');
+        }
+
+        // Hide loading state
+        function hideLoading() {
+            loginText.classList.remove('hidden');
+            loginLoading.classList.add('hidden');
+        }
+
+        // Login function
+        function login(email) {
+            currentUser = email;
+            localStorage.setItem('bookhub_user', email);
+            showFlipbookSection();
+        }
+
+        // Show flipbook section
+        function showFlipbookSection() {
+            loginSection.classList.add('hidden');
+            flipbookSection.classList.remove('hidden');
+            userEmailSpan.textContent = currentUser;
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('bookhub_user');
+            loginSection.classList.remove('hidden');
+            flipbookSection.classList.add('hidden');
+            loginForm.reset();
+        }
+
+        // Handle regular login
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            showLoading();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Simulate API call
+            setTimeout(() => {
+                if (users[email] && users[email] === password) {
+                    login(email);
+                } else {
+                    alert('❌ Email hoặc mật khẩu không đúng!\n\nThử:\n• demo@gmail.com / password123\n• user@example.com / demo123');
+                }
+                hideLoading();
+            }, 1500);
+        });
+
+        // Handle Gmail login
+        gmailLoginBtn.addEventListener('click', function() {
+            showLoading();
+            
+            // Simulate Gmail OAuth
+            setTimeout(() => {
+                const gmailUser = 'your.email@gmail.com';
+                login(gmailUser);
+                hideLoading();
+            }, 2000);
+        });
+
+        // Handle flipbook opening
+        openFlipbookBtn.addEventListener('click', function() {
+            // Replace with your actual flipbook URL
+            const flipbookUrl = 'https://online.flipbuilder.com/your-flipbook-link';
+            
+            // You can also use an embedded flipbook
+            alert('🎉 Mở flipbook...\n\nTrong thực tế, đây sẽ là link flipbook của bạn:\n' + flipbookUrl);
+            
+            // Open in new tab
+            // window.open(flipbookUrl, '_blank');
+            
+            // Or embed in current page
+            showEmbeddedFlipbook();
+        });
+
+        // Show embedded flipbook simulation
+        function showEmbeddedFlipbook() {
+            flipbookSection.innerHTML = `
+                <div class="user-info">
+                    <h3>📖 Đang Đọc Sách</h3>
+                    <p>${currentUser}</p>
+                </div>
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: 12px; text-align: center; min-height: 400px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">📚</div>
+                    <h3>Flipbook Được Tích Hợp Tại Đây</h3>
+                    <p style="color: #666; margin: 1rem 0;">Trong thực tế, đây sẽ là iframe chứa flipbook của bạn</p>
+                    <code style="background: #e9ecef; padding: 0.5rem; border-radius: 6px; font-size: 0.9rem;">
+                        &lt;iframe src="your-flipbook-url" width="100%" height="500px"&gt;&lt;/iframe&gt;
+                    </code>
+                </div>
+                <button class="btn logout-btn" onclick="location.reload()">
+                    🔙 Quay Lại Thư Viện
+                </button>
+            `;
+        }
+
+        // Handle logout
+        logoutBtn.addEventListener('click', logout);
+
+        // Check login status on page load
+        checkLoggedIn();
+
+        // Demo accounts info
+        console.log('🔐 Demo Accounts:');
+        console.log('Email: demo@gmail.com | Password: password123');
+        console.log('Email: user@example.com | Password: demo123');
+    </script>
+</body>
+</html>
