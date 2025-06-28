@@ -1,0 +1,13 @@
+{
+  "name": "flipbook-landing",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server/server.js",
+    "build": "echo 'Ready to deploy'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
