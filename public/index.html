@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookHub - Thư Viện Sách Điện Tử</title>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <meta name="google-signin-client_id" content="664258436578-abc123.apps.googleusercontent.com">
     <style>
         * {
             margin: 0;
@@ -185,8 +183,33 @@
             padding: 0 1rem;
         }
 
+        /* CRITICAL: Default state visibility */
         .hidden {
-            display: none;
+            display: none !important;
+        }
+
+        .login-section {
+            display: block; /* Always show login first */
+        }
+
+        .dashboard-section {
+            display: none; /* Hidden by default */
+        }
+
+        .flipbook-viewer {
+            display: none !important; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .flipbook-viewer.show {
+            display: flex !important; /* Show when needed */
         }
 
         .user-info {
@@ -226,19 +249,6 @@
         .logout-btn {
             background: linear-gradient(135deg, #ff7675, #fd79a8);
             width: 100%;
-        }
-
-        /* Flipbook Viewer Styles */
-        .flipbook-viewer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
         }
 
         .viewer-header {
@@ -297,7 +307,6 @@
             overflow: hidden;
         }
 
-        /* Loading animation */
         .flipbook-loading {
             display: flex;
             justify-content: center;
@@ -306,18 +315,8 @@
             background: #f8f9fa;
             flex-direction: column;
             gap: 1rem;
-        }
-
-        .flipbook-loading::after {
-            content: "📚 Đang tải sách...";
             font-size: 1.2rem;
             color: #666;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
 
         .demo-accounts {
@@ -445,7 +444,7 @@
             <p>Thư viện sách điện tử cao cấp</p>
         </div>
 
-        <!-- Login Section -->
+        <!-- Login Section (Always visible first) -->
         <div id="loginSection" class="login-section">
             <div id="messageContainer"></div>
             
@@ -482,8 +481,8 @@
             </div>
         </div>
 
-        <!-- Dashboard Section -->
-        <div id="dashboardSection" class="dashboard-section hidden">
+        <!-- Dashboard Section (Hidden by default) -->
+        <div id="dashboardSection" class="dashboard-section">
             <div class="user-info">
                 <img id="userAvatar" src="" alt="Avatar" class="avatar" style="display: none;">
                 <h3 id="userName">🎉 Chào mừng!</h3>
@@ -516,8 +515,8 @@
         </div>
     </div>
 
-    <!-- Flipbook Viewer -->
-    <div id="flipbookViewer" class="flipbook-viewer hidden">
+    <!-- Flipbook Viewer (Hidden by default) -->
+    <div id="flipbookViewer" class="flipbook-viewer">
         <div class="viewer-header">
             <h3>📖 Đang Đọc Sách</h3>
             <div class="viewer-controls">
@@ -528,6 +527,7 @@
         <div class="flipbook-container-iframe">
             <div class="flipbook-loading">
                 <div style="font-size: 3rem;">📚</div>
+                <div>Đang tải sách...</div>
             </div>
         </div>
     </div>
@@ -535,9 +535,7 @@
     <script>
         // Configuration
         const CONFIG = {
-            // Your actual flipbook URL from FlipHTML5
             FLIPBOOK_URL: 'https://online.fliphtml5.com/gfqeu/wswt/',
-            // Demo users database
             DEMO_USERS: {
                 'demo@gmail.com': { password: 'password123', name: 'Demo User' },
                 'user@example.com': { password: 'demo123', name: 'Test User' }
@@ -561,41 +559,77 @@
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 BookHub initializing...');
+            
+            // Force show login section
+            showLoginSection();
+            
+            // Check if user was logged in
             checkAuthStatus();
+            
+            // Setup event listeners
             setupEventListeners();
+            
+            console.log('✅ BookHub ready!');
         });
+
+        // Force show login section
+        function showLoginSection() {
+            loginSection.style.display = 'block';
+            dashboardSection.style.display = 'none';
+            flipbookViewer.classList.remove('show');
+            
+            console.log('📱 Login section displayed');
+        }
 
         // Check if user is already logged in
         function checkAuthStatus() {
-            const savedUser = localStorage.getItem('bookhub_user');
-            if (savedUser) {
-                const userData = JSON.parse(savedUser);
-                showDashboard(userData);
+            try {
+                const savedUser = localStorage.getItem('bookhub_user');
+                if (savedUser) {
+                    const userData = JSON.parse(savedUser);
+                    console.log('👤 Found saved user:', userData.email);
+                    showDashboard(userData);
+                } else {
+                    console.log('🔐 No saved user, showing login');
+                    showLoginSection();
+                }
+            } catch (error) {
+                console.error('❌ Error checking auth:', error);
+                showLoginSection();
             }
         }
 
         // Setup event listeners
         function setupEventListeners() {
-            loginForm.addEventListener('submit', handleEmailLogin);
-            googleSignInBtn.addEventListener('click', handleGoogleSignIn);
-            openFlipbookBtn.addEventListener('click', openFlipbook);
-            logoutBtn.addEventListener('click', logout);
+            console.log('🔧 Setting up event listeners...');
+            
+            if (loginForm) loginForm.addEventListener('submit', handleEmailLogin);
+            if (googleSignInBtn) googleSignInBtn.addEventListener('click', handleGoogleSignIn);
+            if (openFlipbookBtn) openFlipbookBtn.addEventListener('click', openFlipbook);
+            if (logoutBtn) logoutBtn.addEventListener('click', logout);
             
             // Flipbook controls
-            document.getElementById('closeFlipbook').addEventListener('click', closeFlipbook);
-            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+            const closeBtn = document.getElementById('closeFlipbook');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
             
-            // Close on Escape key
+            if (closeBtn) closeBtn.addEventListener('click', closeFlipbook);
+            if (fullscreenBtn) fullscreenBtn.addEventListener('click', toggleFullscreen);
+            
+            // Escape key to close flipbook
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && !flipbookViewer.classList.contains('hidden')) {
+                if (e.key === 'Escape') {
                     closeFlipbook();
                 }
             });
+            
+            console.log('✅ Event listeners ready');
         }
 
         // Handle email/password login
         function handleEmailLogin(e) {
             e.preventDefault();
+            console.log('🔐 Attempting email login...');
             
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
@@ -607,7 +641,7 @@
 
             showLoading();
             
-            // Simulate API call delay
+            // Simulate API call
             setTimeout(() => {
                 if (CONFIG.DEMO_USERS[email] && CONFIG.DEMO_USERS[email].password === password) {
                     const userData = {
@@ -616,9 +650,11 @@
                         loginMethod: 'email'
                     };
                     
+                    console.log('✅ Login successful:', email);
                     login(userData);
                     showMessage('🎉 Đăng nhập thành công!', 'success');
                 } else {
+                    console.log('❌ Login failed:', email);
                     showMessage('❌ Email hoặc mật khẩu không đúng!', 'error');
                 }
                 hideLoading();
@@ -627,9 +663,9 @@
 
         // Handle Google Sign-In (simulated)
         function handleGoogleSignIn() {
+            console.log('📧 Google sign-in clicked...');
             showLoading();
             
-            // Simulate Google OAuth flow
             setTimeout(() => {
                 const userData = {
                     email: 'your.email@gmail.com',
@@ -646,60 +682,78 @@
 
         // Login function
         function login(userData) {
-            localStorage.setItem('bookhub_user', JSON.stringify(userData));
-            showDashboard(userData);
+            try {
+                localStorage.setItem('bookhub_user', JSON.stringify(userData));
+                showDashboard(userData);
+                console.log('💾 User data saved and dashboard shown');
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                showMessage('Có lỗi xảy ra khi đăng nhập', 'error');
+            }
         }
 
         // Show dashboard
         function showDashboard(userData) {
-            loginSection.classList.add('hidden');
-            dashboardSection.classList.remove('hidden');
+            console.log('📊 Showing dashboard for:', userData.email);
             
-            userNameEl.textContent = `🎉 Chào ${userData.name}!`;
-            userEmailEl.textContent = userData.email;
+            // Hide login, show dashboard
+            loginSection.style.display = 'none';
+            dashboardSection.style.display = 'block';
             
-            if (userData.avatar) {
+            // Update user info
+            if (userNameEl) userNameEl.textContent = `🎉 Chào ${userData.name}!`;
+            if (userEmailEl) userEmailEl.textContent = userData.email;
+            
+            if (userData.avatar && userAvatarEl) {
                 userAvatarEl.src = userData.avatar;
                 userAvatarEl.style.display = 'block';
             }
+            
+            console.log('✅ Dashboard displayed');
         }
 
-        // Open flipbook with enhanced viewer
+        // Open flipbook
         function openFlipbook() {
+            console.log('📚 Opening flipbook...');
+            
             try {
                 // Show flipbook viewer
-                flipbookViewer.classList.remove('hidden');
+                flipbookViewer.classList.add('show');
                 
                 const container = document.querySelector('.flipbook-container-iframe');
                 
-                // Show loading state
-                container.innerHTML = '<div class="flipbook-loading"><div style="font-size: 3rem;">📚</div></div>';
+                // Show loading first
+                container.innerHTML = `
+                    <div class="flipbook-loading">
+                        <div style="font-size: 3rem;">📚</div>
+                        <div>Đang tải sách...</div>
+                    </div>
+                `;
                 
-                // Add some loading delay for better UX
+                // Load flipbook after delay
                 setTimeout(() => {
-                    // Load actual flipbook
                     container.innerHTML = `
                         <div style="position:relative;padding-top:max(60%,324px);width:100%;height:0;">
                             <iframe 
-                                id="flipbookFrame"
                                 style="position:absolute;border:none;width:100%;height:100%;left:0;top:0;" 
                                 src="${CONFIG.FLIPBOOK_URL}" 
                                 seamless="seamless" 
                                 scrolling="no" 
                                 frameborder="0" 
                                 allowtransparency="true" 
-                                allowfullscreen="true">
+                                allowfullscreen="true"
+                                onload="console.log('📖 Flipbook loaded successfully')"
+                                onerror="console.error('❌ Flipbook failed to load')">
                             </iframe>
                         </div>
                     `;
                     
-                    // Track analytics (you can replace with real analytics)
-                    console.log('📊 Flipbook opened:', CONFIG.FLIPBOOK_URL);
+                    console.log('✅ Flipbook iframe created');
                     
-                }, 1200);
+                }, 1000);
                 
             } catch (error) {
-                console.error('Flipbook error:', error);
+                console.error('❌ Flipbook error:', error);
                 showMessage('❌ Có lỗi xảy ra khi tải flipbook. Vui lòng thử lại.', 'error');
                 closeFlipbook();
             }
@@ -707,74 +761,79 @@
 
         // Close flipbook
         function closeFlipbook() {
-            flipbookViewer.classList.add('hidden');
+            console.log('🔒 Closing flipbook...');
             
-            // Clear iframe to stop loading and save bandwidth
+            flipbookViewer.classList.remove('show');
+            
+            // Clear iframe content
             const container = document.querySelector('.flipbook-container-iframe');
-            container.innerHTML = '<div class="flipbook-loading"><div style="font-size: 3rem;">📚</div></div>';
+            if (container) {
+                container.innerHTML = `
+                    <div class="flipbook-loading">
+                        <div style="font-size: 3rem;">📚</div>
+                        <div>Đang tải sách...</div>
+                    </div>
+                `;
+            }
             
             // Exit fullscreen if active
             if (document.fullscreenElement) {
-                document.exitFullscreen();
+                document.exitFullscreen().catch(() => {});
             }
+            
+            console.log('✅ Flipbook closed');
         }
 
-        // Toggle fullscreen mode
+        // Toggle fullscreen
         function toggleFullscreen() {
             try {
                 if (document.fullscreenElement) {
                     document.exitFullscreen();
+                    console.log('📺 Exited fullscreen');
                 } else {
                     flipbookViewer.requestFullscreen();
+                    console.log('📺 Entered fullscreen');
                 }
             } catch (error) {
-                console.log('Fullscreen not supported or failed');
-                showMessage('⚠️ Chế độ toàn màn hình không được hỗ trợ trên trình duyệt này', 'error');
+                console.log('⚠️ Fullscreen not supported');
+                showMessage('⚠️ Chế độ toàn màn hình không được hỗ trợ', 'error');
             }
         }
 
         // Logout
         function logout() {
-            // Sign out from Google if applicable
-            if (gapi && gapi.auth2) {
-                const authInstance = gapi.auth2.getAuthInstance();
-                if (authInstance) {
-                    authInstance.signOut().catch(() => {});
-                }
-            }
+            console.log('👋 Logging out...');
             
-            // Clear local storage
+            // Clear storage
             localStorage.removeItem('bookhub_user');
             
             // Close flipbook if open
-            if (!flipbookViewer.classList.contains('hidden')) {
-                closeFlipbook();
-            }
+            closeFlipbook();
             
             // Show login section
-            dashboardSection.classList.add('hidden');
-            loginSection.classList.remove('hidden');
+            showLoginSection();
             
             // Reset form
-            loginForm.reset();
+            if (loginForm) loginForm.reset();
             clearMessages();
             
             showMessage('👋 Đã đăng xuất thành công!', 'success');
+            console.log('✅ Logout complete');
         }
 
-        // Show/hide loading
+        // Loading states
         function showLoading() {
-            loginText.classList.add('hidden');
-            loginLoading.classList.remove('hidden');
-            document.getElementById('loginBtn').disabled = true;
-            googleSignInBtn.disabled = true;
+            if (loginText) loginText.classList.add('hidden');
+            if (loginLoading) loginLoading.classList.remove('hidden');
+            if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = true;
+            if (googleSignInBtn) googleSignInBtn.disabled = true;
         }
 
         function hideLoading() {
-            loginText.classList.remove('hidden');
-            loginLoading.classList.add('hidden');
-            document.getElementById('loginBtn').disabled = false;
-            googleSignInBtn.disabled = false;
+            if (loginText) loginText.classList.remove('hidden');
+            if (loginLoading) loginLoading.classList.add('hidden');
+            if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = false;
+            if (googleSignInBtn) googleSignInBtn.disabled = false;
         }
 
         // Show message
@@ -783,42 +842,31 @@
             messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
             messageDiv.textContent = message;
             
-            messageContainer.innerHTML = '';
-            messageContainer.appendChild(messageDiv);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.remove();
-                }
-            }, 5000);
+            if (messageContainer) {
+                messageContainer.innerHTML = '';
+                messageContainer.appendChild(messageDiv);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.remove();
+                    }
+                }, 5000);
+            }
         }
 
         // Clear messages
         function clearMessages() {
-            messageContainer.innerHTML = '';
+            if (messageContainer) {
+                messageContainer.innerHTML = '';
+            }
         }
 
-        // Google Sign-In API callback (if you setup real Google OAuth)
-        function onSignIn(googleUser) {
-            const profile = googleUser.getBasicProfile();
-            const userData = {
-                email: profile.getEmail(),
-                name: profile.getName(),
-                avatar: profile.getImageUrl(),
-                loginMethod: 'google'
-            };
-            
-            login(userData);
-            showMessage('🎉 Đăng nhập Google thành công!', 'success');
-        }
-
-        // Console info for developers
-        console.log('🔐 Demo Accounts:');
-        console.log('Email: demo@gmail.com | Password: password123');
-        console.log('Email: user@example.com | Password: demo123');
+        // Console info
+        console.log('🔐 Demo Accounts Available:');
+        console.log('📧 demo@gmail.com / password123');
+        console.log('📧 user@example.com / demo123');
         console.log('📚 Flipbook URL:', CONFIG.FLIPBOOK_URL);
-        console.log('🚀 BookHub Landing Page Ready!');
     </script>
 </body>
 </html>
