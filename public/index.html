@@ -82,51 +82,45 @@
             padding: 2rem;
         }
 
-        .login-form {
+        .login-container {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 2rem;
+            text-align: center;
         }
 
-        .input-group {
-            position: relative;
+        .login-header h2 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
         }
 
-        .input-group input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e1e8ed;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .input-group label {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
+        .login-header p {
             color: #666;
             font-size: 1rem;
-            transition: all 0.3s ease;
-            pointer-events: none;
+            line-height: 1.5;
         }
 
-        .input-group input:focus + label,
-        .input-group input:valid + label {
-            top: -0.5rem;
-            left: 0.5rem;
-            font-size: 0.8rem;
-            color: #667eea;
-            background: white;
-            padding: 0 0.5rem;
+        /* Google Sign-In Button Styling */
+        #googleSignInContainer {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        #g_id_signin {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .login-info {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .login-info small {
+            color: #666;
+            font-size: 0.9rem;
         }
 
         .btn {
@@ -163,27 +157,7 @@
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
         }
 
-        .divider {
-            text-align: center;
-            margin: 1rem 0;
-            position: relative;
-            color: #666;
-        }
 
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e1e8ed;
-        }
-
-        .divider span {
-            background: white;
-            padding: 0 1rem;
-        }
 
         /* CRITICAL: Default state visibility */
         .hidden {
@@ -323,45 +297,7 @@
 
 
 
-        .google-btn {
-            width: 100%;
-            background: #db4437;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
 
-        .google-btn:hover {
-            background: #c23321;
-            color: white;
-        }
-
-        /* Google Sign-In Button Styling */
-        #googleSignInContainer {
-            width: 100%;
-            margin-bottom: 0.5rem;
-        }
-
-        #g_id_signin {
-            width: 100%;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
 
         .success-message {
             background: #d4edda;
@@ -540,26 +476,19 @@
         const CONFIG = {
             FLIPBOOK_URL: 'https://online.fliphtml5.com/gfqeu/wswt/',
             GOOGLE_CLIENT_ID: '331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com',
-            API_BASE: '/api',
-            DEMO_USERS: {
-                'demo@gmail.com': { password: 'password123', name: 'Demo User' },
-                'user@example.com': { password: 'demo123', name: 'Test User' }
-            }
+            API_BASE: '/api'
         };
 
         // DOM Elements
         const loginSection = document.getElementById('loginSection');
         const dashboardSection = document.getElementById('dashboardSection');
         const flipbookViewer = document.getElementById('flipbookViewer');
-        const loginForm = document.getElementById('loginForm');
         const messageContainer = document.getElementById('messageContainer');
         const userNameEl = document.getElementById('userName');
         const userEmailEl = document.getElementById('userEmail');
         const userAvatarEl = document.getElementById('userAvatar');
         const openFlipbookBtn = document.getElementById('openFlipbook');
         const logoutBtn = document.getElementById('logoutBtn');
-        const loginText = document.getElementById('loginText');
-        const loginLoading = document.getElementById('loginLoading');
 
         // Google Sign-In initialization
         function initializeGoogleSignIn() {
@@ -663,7 +592,6 @@
         function setupEventListeners() {
             console.log('🔧 Setting up event listeners...');
             
-            if (loginForm) loginForm.addEventListener('submit', handleEmailLogin);
             if (openFlipbookBtn) openFlipbookBtn.addEventListener('click', openFlipbook);
             if (logoutBtn) logoutBtn.addEventListener('click', logout);
             
@@ -684,64 +612,13 @@
             console.log('✅ Event listeners ready');
         }
 
-        // Handle email/password login
-        async function handleEmailLogin(e) {
-            e.preventDefault();
-            console.log('🔐 Attempting email login...');
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (!email || !password) {
-                showMessage('Vui lòng nhập đầy đủ email và mật khẩu', 'error');
-                return;
-            }
 
-            showLoading();
-            
-            try {
-                const response = await fetch(`${CONFIG.API_BASE}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
-                    console.log('✅ Email login successful:', email);
-                    
-                    localStorage.setItem('auth_token', data.token);
-                    
-                    const userData = {
-                        ...data.user,
-                        loginMethod: 'email'
-                    };
-                    
-                    login(userData);
-                    showMessage('🎉 Đăng nhập thành công!', 'success');
-                } else {
-                    console.log('❌ Email login failed:', data.message);
-                    showMessage(data.message || 'Đăng nhập thất bại', 'error');
-                }
-                
-            } catch (error) {
-                console.error('❌ Email login error:', error);
-                showMessage('Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
 
         // Handle Google Sign-In (Real Implementation)
         async function handleGoogleSignIn(response) {
             console.log('🔐 Google Sign-In response received');
             
             try {
-                showLoading();
-                
                 // Send ID token to our backend for verification
                 const apiResponse = await fetch(`${CONFIG.API_BASE}/google-auth`, {
                     method: 'POST',
@@ -785,8 +662,6 @@
             } catch (error) {
                 console.error('❌ Google Sign-In error:', error);
                 showMessage('Có lỗi xảy ra khi đăng nhập Google. Vui lòng thử lại.', 'error');
-            } finally {
-                hideLoading();
             }
         }
 
@@ -954,26 +829,14 @@
             // Show login section
             showLoginSection();
             
-            // Reset form
-            if (loginForm) loginForm.reset();
+            // Clear messages
             clearMessages();
             
             showMessage('👋 Đã đăng xuất thành công!', 'success');
             console.log('✅ Logout complete');
         }
 
-        // Loading states
-        function showLoading() {
-            if (loginText) loginText.classList.add('hidden');
-            if (loginLoading) loginLoading.classList.remove('hidden');
-            if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = true;
-        }
 
-        function hideLoading() {
-            if (loginText) loginText.classList.remove('hidden');
-            if (loginLoading) loginLoading.classList.add('hidden');
-            if (document.getElementById('loginBtn')) document.getElementById('loginBtn').disabled = false;
-        }
 
         // Show message
         function showMessage(message, type = 'info') {
