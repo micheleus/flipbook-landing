@@ -223,16 +223,17 @@
 
                 <div class="login-footer">
                     <small>💡 Sử dụng tài khoản Google của bạn để đăng nhập an toàn.</small>
+                    <br><br>
+                    <small style="color: #999;">🔧 Phiên bản Frontend Only - Không cần backend API</small>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration
+        // Configuration (Frontend only)
         const CONFIG = {
-            GOOGLE_CLIENT_ID: '331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com',
-            API_BASE: '/api'
+            GOOGLE_CLIENT_ID: '331612732204-1t1ea8eqoln2uhnc8hnuctelim6docsj.apps.googleusercontent.com'
         };
 
         // DOM Elements
@@ -343,45 +344,68 @@
             }, 1500);
         }
 
-        // Handle Google Sign-In
+        // Handle Google Sign-In (Frontend only version)
         async function handleGoogleSignIn(response) {
             console.log('🔐 Google Sign-In response received');
             
             try {
-                const apiResponse = await fetch(`${CONFIG.API_BASE}/google-auth`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        idToken: response.credential
-                    })
-                });
+                // Decode the JWT token to get user info (frontend only)
+                const userInfo = parseJWT(response.credential);
+                console.log('✅ User info extracted:', userInfo);
                 
-                const data = await apiResponse.json();
-                
-                if (apiResponse.ok && data.success) {
-                    console.log('✅ Google auth successful:', data.user.email);
-                    showMessage(`🎉 Chào mừng ${data.user.name}! Đang chuyển hướng...`, 'success');
+                if (userInfo && userInfo.email) {
+                    // Simple email domain check (you can customize this)
+                    const allowedDomains = ['gmail.com', 'googlemail.com']; // Add your allowed domains
+                    const emailDomain = userInfo.email.split('@')[1];
                     
-                    // Redirect to dashboard or main app
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 2000);
-                    
-                } else {
-                    console.error('❌ Google auth failed:', data.message);
-                    
-                    if (apiResponse.status === 403) {
-                        showMessage(`❌ ${data.message}`, 'error');
+                    // For demo purposes, allow all Gmail accounts
+                    // In production, you should have a proper backend verification
+                    if (allowedDomains.includes(emailDomain) || userInfo.email_verified) {
+                        showMessage(`🎉 Chào mừng ${userInfo.name || userInfo.email}! Đăng nhập thành công.`, 'success');
+                        
+                        // Store user info locally (frontend only)
+                        localStorage.setItem('bookhub_user', JSON.stringify({
+                            name: userInfo.name,
+                            email: userInfo.email,
+                            picture: userInfo.picture,
+                            loginMethod: 'google',
+                            loginTime: new Date().toISOString()
+                        }));
+                        
+                        // Redirect to your main application
+                        setTimeout(() => {
+                            showMessage('🔄 Đang chuyển hướng...', 'success');
+                            // You can redirect to your main app here
+                            // window.location.href = '/dashboard.html';
+                            console.log('✅ Login successful, user data saved to localStorage');
+                        }, 2000);
+                        
                     } else {
-                        showMessage(data.message || 'Đăng nhập Google thất bại', 'error');
+                        showMessage('❌ Tài khoản này chưa được cấp quyền truy cập.', 'error');
                     }
+                } else {
+                    showMessage('❌ Không thể lấy thông tin từ Google. Vui lòng thử lại.', 'error');
                 }
                 
             } catch (error) {
-                console.error('❌ Google Sign-In error:', error);
-                showMessage('Có lỗi xảy ra khi đăng nhập Google. Vui lòng thử lại.', 'error');
+                console.error('❌ Google Sign-In processing error:', error);
+                showMessage('❌ Có lỗi xảy ra khi xử lý đăng nhập. Vui lòng thử lại.', 'error');
+            }
+        }
+        
+        // Parse JWT token (simple frontend parsing)
+        function parseJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('❌ JWT parsing error:', error);
+                return null;
             }
         }
 
@@ -432,8 +456,9 @@
             console.log('✅ BookHub Login ready!');
         });
 
-        console.log('📚 BookHub - Simplified Login Version');
+        console.log('📚 BookHub - Frontend Only Version');
         console.log('🔧 Google Client ID configured');
+        console.log('⚠️ No backend API required');
         console.log('✅ Ready for authentication!');
     </script>
 </body>
